@@ -43,7 +43,7 @@ typedef struct __GPMC_DATA__
 enum IotclCmd
 {
     eCfgSpeed,		// 设置波特率
-    eCfgTermios,    // 配置停止位,校验位,数据长度
+    eCfgTermios     // 配置停止位,校验位,数据长度
 };
 
 

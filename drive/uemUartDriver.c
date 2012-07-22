@@ -67,19 +67,14 @@ int uartInit(sGpmcData* pGpmc);
 
 static int uemUartOpen(struct inode *inode, struct file *filp)
 {
-	sGpmcData *pDev;
-	int myMinor, myMajor;
-	pDev = container_of(inode->i_cdev,sGpmcData, cdev);
+    sGpmcData *pDev;
+    int myMinor, myMajor;
+    pDev = container_of(inode->i_cdev,sGpmcData, cdev);
     filp->private_data = pDev;		/* 将设备结构体指针赋值给文件私有数据指针*/
-	myMajor = imajor(inode);
-	myMinor = iminor(inode);
-	pDev = &pUemUartDev[myMinor];
-	//pDev->devno = MKDEV(myMajor, myMinor);
-//	printk(KERN_DEBUG "pdev = %p, filp = %p", pDev, filp);
-//	printk(KERN_DEBUG "devno = 0x%x, Major = %d, myMinor = %d\r\n", pDev->devno, myMajor, myMinor);
-//    printk(KERN_DEBUG "uem uart open\r\n");
-//	printk(KERN_DEBUG "pdev = %p, filp = %p", pDev, filp);
-	
+    myMajor = imajor(inode);
+    myMinor = iminor(inode);
+    pDev = &pUemUartDev[myMinor];
+
     return 0;
 }
 
@@ -99,7 +94,7 @@ static int uemUartOpen(struct inode *inode, struct file *filp)
  **********************************************************/
 static int uemUartRelease(struct inode *inode, struct file *filp)
 {
-//    printk(KERN_DEBUG "uem uart Close\n");
+    //    printk(KERN_DEBUG "uem uart Close\n");
     return 0;
 }
 
@@ -133,9 +128,9 @@ static int uemUartIoctl(struct inode *inode, struct file *filp, unsigned int cmd
     case eCfgTermios:
         ret = CfgTermios(dev, arg);
         break;
-		
-	default:
-		break;
+
+    default:
+        break;
     }
 
     return ret;
@@ -160,25 +155,25 @@ static int uemUartIoctl(struct inode *inode, struct file *filp, unsigned int cmd
  ************************************************************/
 static ssize_t uemUartRead(struct file *filp, char __user *buf, size_t size, loff_t *ppos)
 {
-	sGpmcData *pDev;
+    sGpmcData *pDev;
     int ret = 1;
     unsigned int count = size;
 
-	pDev = filp->private_data;
+    pDev = filp->private_data;
 
-//	printk(KERN_DEBUG "pdev = %p dev = 0x%x, filp=%p", pDev, filp->f_mapping->host->i_cdev->dev, filp);
-//    printk(KERN_DEBUG "uemUart Read count = %d\n", count);
-//	VaeDebug("devno = 0x%x, MAJOR = %d, minor = %d ", pDev->devno, MAJOR(pDev->devno), MINOR(pDev->devno)) ;
+    //	printk(KERN_DEBUG "pdev = %p dev = 0x%x, filp=%p", pDev, filp->f_mapping->host->i_cdev->dev, filp);
+    //    printk(KERN_DEBUG "uemUart Read count = %d\n", count);
+    //	VaeDebug("devno = 0x%x, MAJOR = %d, minor = %d ", pDev->devno, MAJOR(pDev->devno), MINOR(pDev->devno)) ;
 
-	count = __kfifo_get(pDev->pFifo, pDev->data_buf, count);
-	if (copy_to_user(buf,(pDev->data_buf), count))
+    count = __kfifo_get(pDev->pFifo, pDev->data_buf, count);
+    if (copy_to_user(buf,(pDev->data_buf), count))
     {
         ret = -EFAULT;
     }
     else
     {
         ret = count;
- //       printk(KERN_DEBUG "read %d bytes(s) \r\n", count);
+        //       printk(KERN_DEBUG "read %d bytes(s) \r\n", count);
     }
 
     return ret;
@@ -203,57 +198,57 @@ static ssize_t uemUartRead(struct file *filp, char __user *buf, size_t size, lof
  ************************************************************/
 static ssize_t uemUartWrite(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-	sGpmcRegRW val;
-	sGpmcData *pDev;
-	int ret , i;
-	size_t count ;
-	u16 transmit_empty;
-	int tport;
-	unsigned long arg;
+    sGpmcRegRW val;
+    sGpmcData *pDev;
+    int ret , i;
+    size_t count ;
+    u16 transmit_empty;
+    int tport;
+    unsigned long arg;
 
-	pDev = filp->private_data;
-	arg = (unsigned long )&val;
-	count = size;
+    pDev = filp->private_data;
+    arg = (unsigned long )&val;
+    count = size;
 
-//	printk(KERN_DEBUG "uemUartWrite\n");
-//	printk(KERN_DEBUG "pdev = %p dev = 0x%x, filp=%p", pDev, filp->f_mapping->host->i_cdev->dev, filp);
-//	VaeDebug("devno = 0x%x, MAJOR = %d, minor = %d ", pDev->devno, MAJOR(pDev->devno), MINOR(pDev->devno)) ;
+    //	printk(KERN_DEBUG "uemUartWrite\n");
+    //	printk(KERN_DEBUG "pdev = %p dev = 0x%x, filp=%p", pDev, filp->f_mapping->host->i_cdev->dev, filp);
+    //	VaeDebug("devno = 0x%x, MAJOR = %d, minor = %d ", pDev->devno, MAJOR(pDev->devno), MINOR(pDev->devno)) ;
 
-	// 获取端口号
-	tport = MINOR(pDev->devno) * 0x08;
+    // 获取端口号
+    tport = MINOR(pDev->devno) * 0x08;
 
-	if (count > UART_BUF_SIZE ) 	// 如果要写入的数据过长
-	{
-		count = UART_BUF_SIZE ;
-	}
+    if (count > UART_BUF_SIZE ) 	// 如果要写入的数据过长
+    {
+        count = UART_BUF_SIZE ;
+    }
 
-	if (copy_from_user(pDev->data_buf , buf , count))
-	{
-		ret =  -EFAULT;
-	}
-	else
-	{
-		ret = count;
-		pDev->dateCnt = count;
-//		printk(KERN_DEBUG "written %d bytes(s) \r\n", count);
-	}
+    if (copy_from_user(pDev->data_buf , buf , count))
+    {
+        ret =  -EFAULT;
+    }
+    else
+    {
+        ret = count;
+        pDev->dateCnt = count;
+        //		printk(KERN_DEBUG "written %d bytes(s) \r\n", count);
+    }
 
-	for (i = 0; i< ret; i++)
-	{
-		do
-		{// 检测是否可写
-			val.offset = tport + 0x05;
-		  	val.val.reg16 = 0x0080;
-			ioctlReadReg16(pDev , arg);
-			transmit_empty = val.val.reg16;
-		}while( (transmit_empty & 0x0040) != 0x0040 );
-	
-		val.offset = tport + 0x00;
-	  	val.val.reg16 = pDev->data_buf[i];
-		ioctlWriteReg16(pDev , arg);
-	}
+    for (i = 0; i< ret; i++)
+    {
+        do
+        {// 检测是否可写
+            val.offset = tport + 0x05;
+            val.val.reg16 = 0x0080;
+            ioctlReadReg16(pDev , arg);
+            transmit_empty = val.val.reg16;
+        }while( (transmit_empty & 0x0040) != 0x0040 );
 
-	return ret;
+        val.offset = tport + 0x00;
+        val.val.reg16 = pDev->data_buf[i];
+        ioctlWriteReg16(pDev , arg);
+    }
+
+    return ret;
 
 }
 
@@ -280,37 +275,37 @@ static loff_t uemUartLlseek(struct file *filp , loff_t offset , int orig)
 
     switch (orig)
     {
-        case SEEK_SET:	/* 相对文件开始位置偏移 */
-            if( offset < 0 )
-            {
-                ret = - EINVAL;
-                break;
-            }
-            if ((unsigned int)offset > FPGA_BUF_SIZE)
-            {
-                ret = -EINVAL;
-                break;
-            }
-            filp->f_pos = (unsigned int)offset;
-            ret = filp ->f_pos;
+    case SEEK_SET:	/* 相对文件开始位置偏移 */
+        if( offset < 0 )
+        {
+            ret = - EINVAL;
             break;
-        case SEEK_CUR:	/* 相对文件当前位置的偏移 */
-            if((filp ->f_pos + offset ) > FPGA_BUF_SIZE )
-            {
-                ret = -EINVAL;
-                break;
-            }
-            if ((filp ->f_pos + offset ) < 0)
-            {
-                ret = - EINVAL;
-                break;
-            }
-            filp ->f_pos += offset;
-            ret = filp ->f_pos ;
-            break;
-        default:
+        }
+        if ((unsigned int)offset > FPGA_BUF_SIZE)
+        {
             ret = -EINVAL;
             break;
+        }
+        filp->f_pos = (unsigned int)offset;
+        ret = filp ->f_pos;
+        break;
+    case SEEK_CUR:	/* 相对文件当前位置的偏移 */
+        if((filp ->f_pos + offset ) > FPGA_BUF_SIZE )
+        {
+            ret = -EINVAL;
+            break;
+        }
+        if ((filp ->f_pos + offset ) < 0)
+        {
+            ret = - EINVAL;
+            break;
+        }
+        filp ->f_pos += offset;
+        ret = filp ->f_pos ;
+        break;
+    default:
+        ret = -EINVAL;
+        break;
     }
 
     return ret;
@@ -322,93 +317,93 @@ static loff_t uemUartLlseek(struct file *filp , loff_t offset , int orig)
 
 int readFromUart(int index)
 {		
-	sGpmcData *pDev;
-	sGpmcRegRW val;
-	int cnt;
-	unsigned long arg;
-	u16 data_ready;
-	int tport;
-	unsigned char cbuf[1024];
-// read from uem uart 1
+    sGpmcData *pDev;
+    sGpmcRegRW val;
+    int cnt;
+    unsigned long arg;
+    u16 data_ready;
+    int tport;
+    unsigned char cbuf[1024];
+    // read from uem uart 1
 
-	cnt = 0;
-	pDev = &pUemUartDev[index];
-	arg = (unsigned long )&val;
-	tport = index * 0x08;
-	
-	while (1)
-	{
-		val.offset = tport + 0x05;
- 		val.val.reg16 = 0x0000;
-		ioctlReadReg16(pDev, arg);
- 		data_ready = val.val.reg16;
-		if ( (data_ready & 0x0001) == 0x0001)
-		{// 循环接收数据
-			val.offset = tport;
-   			val.val.reg16 = 0x0000;
-	 		ioctlReadReg16(pDev, arg);
-			cbuf[cnt++] = val.val.reg16;	
-			if (cnt >= 1024)
-			{
-				break;
-			}
-			
-		}
-		else
-		{
-			break;
-		}
-	}
+    cnt = 0;
+    pDev = &pUemUartDev[index];
+    arg = (unsigned long )&val;
+    tport = index * 0x08;
+
+    while (1)
+    {
+        val.offset = tport + 0x05;
+        val.val.reg16 = 0x0000;
+        ioctlReadReg16(pDev, arg);
+        data_ready = val.val.reg16;
+        if ( (data_ready & 0x0001) == 0x0001)
+        {// 循环接收数据
+            val.offset = tport;
+            val.val.reg16 = 0x0000;
+            ioctlReadReg16(pDev, arg);
+            cbuf[cnt++] = val.val.reg16;
+            if (cnt >= 1024)
+            {
+                break;
+            }
+
+        }
+        else
+        {
+            break;
+        }
+    }
 
 
-	__kfifo_put(pUemUartDev[index].pFifo, cbuf, cnt);
-	return cnt;
-	
+    __kfifo_put(pUemUartDev[index].pFifo, cbuf, cnt);
+    return cnt;
+
 }
 
 
 irqreturn_t uemUartIrqFunc(int irqNo, void* dev_id)
 {
-	sGpmcRegRW val;
-	sGpmcData *pDev;
-//	int cnt;
-	u32 tport;
-	unsigned long arg;
-//	u16 data_ready;
-//	unsigned char cbuf[1024];
+    sGpmcRegRW val;
+    sGpmcData *pDev;
+    //	int cnt;
+    u32 tport;
+    unsigned long arg;
+    //	u16 data_ready;
+    //	unsigned char cbuf[1024];
 
-	tport = 0;
-	arg = (unsigned long )&val;
+    tport = 0;
+    arg = (unsigned long )&val;
 
-	switch (irqNo)
-	{
-		case OMAP_GPIO_IRQ(168):
-			readFromUart(0);
-		
-		break;
-			
-		case OMAP_GPIO_IRQ(127):
-			readFromUart(1);
+    switch (irqNo)
+    {
+    case OMAP_GPIO_IRQ(168):
+        readFromUart(0);
 
-		break;
-		
-		case OMAP_GPIO_IRQ(128):
-			readFromUart(2);
-			
-		break;
+        break;
 
-		case OMAP_GPIO_IRQ(129):
-			readFromUart(3);
-		
-		break;
-		
-		default:
-			pDev = NULL;
-			VaeDebug("error");
-		break;
-	}
-	
-	return 0;
+    case OMAP_GPIO_IRQ(127):
+        readFromUart(1);
+
+        break;
+
+    case OMAP_GPIO_IRQ(128):
+        readFromUart(2);
+
+        break;
+
+    case OMAP_GPIO_IRQ(129):
+        readFromUart(3);
+
+        break;
+
+    default:
+        pDev = NULL;
+        VaeDebug("error");
+        break;
+    }
+
+    return 0;
 }
 
 
@@ -416,129 +411,129 @@ irqreturn_t uemUartIrqFunc(int irqNo, void* dev_id)
 int uartIrqTestInit(void)
 {
     int ret, i;
-	char nameBuf[64];
+    char nameBuf[64];
 
-	for (i = 127; i <= 129; i++)
-	{
-		sprintf(nameBuf, "gpio-%d", i);
-		ret = gpio_request(i,nameBuf);
-		if (ret < 0)
-		{
-			VaeDebug("ret = %d\r\ngpio_request error\r\n", ret);
-		}
+    for (i = 127; i <= 129; i++)
+    {
+        sprintf(nameBuf, "gpio-%d", i);
+        ret = gpio_request(i,nameBuf);
+        if (ret < 0)
+        {
+            VaeDebug("ret = %d\r\ngpio_request error\r\n", ret);
+        }
 
-		gpio_direction_input(i);
+        gpio_direction_input(i);
 
-		set_irq_type(OMAP_GPIO_IRQ(i),IRQ_TYPE_EDGE_FALLING);	// 下降沿触发
+        set_irq_type(OMAP_GPIO_IRQ(i),IRQ_TYPE_EDGE_FALLING);	// 下降沿触发
 
-		sprintf(nameBuf, "gpio-%d-irq", i);
-		ret = request_irq(OMAP_GPIO_IRQ(i), uemUartIrqFunc, 0, "uemUartIrq", NULL);	
-		if (ret < 0)
-		{
-			VaeDebug("ret = %d irq error\r\n", ret);
-		}
-	}
+        sprintf(nameBuf, "gpio-%d-irq", i);
+        ret = request_irq(OMAP_GPIO_IRQ(i), uemUartIrqFunc, 0, "uemUartIrq", NULL);
+        if (ret < 0)
+        {
+            VaeDebug("ret = %d irq error\r\n", ret);
+        }
+    }
 
-	i = 168;
-	sprintf(nameBuf, "gpio-%d", i);
-	ret = gpio_request(i,nameBuf);
-	if (ret < 0)
-	{
-		VaeDebug("ret = %d\r\ngpio_request error\r\n", ret);
-	}
+    i = 168;
+    sprintf(nameBuf, "gpio-%d", i);
+    ret = gpio_request(i,nameBuf);
+    if (ret < 0)
+    {
+        VaeDebug("ret = %d\r\ngpio_request error\r\n", ret);
+    }
 
-	gpio_direction_input(i);
-	set_irq_type(OMAP_GPIO_IRQ(i),IRQ_TYPE_EDGE_FALLING);	// 下降沿触发
-	sprintf(nameBuf, "gpio-%d-irq", i);
-	ret = request_irq(OMAP_GPIO_IRQ(i), uemUartIrqFunc, 0, "uemUartIrq", NULL);	
-	if (ret < 0)
-	{
-		VaeDebug("ret = %d irq error\r\n", ret);
-	}
+    gpio_direction_input(i);
+    set_irq_type(OMAP_GPIO_IRQ(i),IRQ_TYPE_EDGE_FALLING);	// 下降沿触发
+    sprintf(nameBuf, "gpio-%d-irq", i);
+    ret = request_irq(OMAP_GPIO_IRQ(i), uemUartIrqFunc, 0, "uemUartIrq", NULL);
+    if (ret < 0)
+    {
+        VaeDebug("ret = %d irq error\r\n", ret);
+    }
 
-	return 0;
+    return 0;
 }
 
 // 释放中断
 int uartIrqRelease(void)
 {
-	int i; 	
-	for (i = 127; i <= 129; i++)
-	{
-		
-		free_irq(OMAP_GPIO_IRQ(i), NULL);
-		gpio_free(i);
-	}
-	
-	free_irq(OMAP_GPIO_IRQ(168), NULL);
-	gpio_free(168);
+    int i;
+    for (i = 127; i <= 129; i++)
+    {
 
-	return 0;
+        free_irq(OMAP_GPIO_IRQ(i), NULL);
+        gpio_free(i);
+    }
+
+    free_irq(OMAP_GPIO_IRQ(168), NULL);
+    gpio_free(168);
+
+    return 0;
 }
 
 
 int uartInit(sGpmcData* myPGpmc)
 {
-	sGpmcRegRW cfg;
-	int i;
-	u32 tport;
-	unsigned long arg;
-	sGpmcData* pGpmc;
+    sGpmcRegRW cfg;
+    int i;
+    u32 tport;
+    unsigned long arg;
+    sGpmcData* pGpmc;
 
-	tport = 0;
-	arg = (unsigned long )&cfg;
+    tport = 0;
+    arg = (unsigned long )&cfg;
 
-	if (1)
-	{
-		for (i = 0; i < 4; i++)
-		{
-		tport = i * 0x08;
-		pGpmc = pUemUartDev;
-		// 波特率配置
-		// LCR BIT7 H
-		cfg.offset = tport + 0x03;
-	  	cfg.val.reg16 = 0x0080;
-		ioctlWriteReg16(pGpmc , arg);
-		
-		cfg.offset = tport + 0x00;
-	  	cfg.val.reg16 = 0x0001;
-		ioctlWriteReg16(pGpmc , arg);
+    if (myPGpmc == NULL)
+    {
+        for (i = 0; i < 4; i++)
+        {
+            tport = i * 0x08;
+            pGpmc = pUemUartDev;
+            // 波特率配置
+            // LCR BIT7 H
+            cfg.offset = tport + 0x03;
+            cfg.val.reg16 = 0x0080;
+            ioctlWriteReg16(pGpmc , arg);
 
-		cfg.offset = tport + 0x01;
-	  	cfg.val.reg16 = 0x0000;
-		ioctlWriteReg16(pGpmc , arg);
+            cfg.offset = tport + 0x00;
+            cfg.val.reg16 = 0x0001;
+            ioctlWriteReg16(pGpmc , arg);
 
-		// 链路配置
-		cfg.offset = tport + 0x03;
-	  	cfg.val.reg16 = 0x0003;
-		ioctlWriteReg16(pGpmc , arg);
+            cfg.offset = tport + 0x01;
+            cfg.val.reg16 = 0x0000;
+            ioctlWriteReg16(pGpmc , arg);
 
-		// 开启读中断
-		cfg.offset = tport + 0x04;
-	  	cfg.val.reg16 = 0x0b;
-		ioctlWriteReg16(pGpmc , arg);
-		
-		cfg.offset = tport + 0x01;
-	  	cfg.val.reg16 = 0x01;
-		ioctlWriteReg16(pGpmc , arg);
+            // 链路配置
+            cfg.offset = tport + 0x03;
+            cfg.val.reg16 = 0x0003;
+            ioctlWriteReg16(pGpmc , arg);
 
-		// 开启fifo
-		cfg.offset = tport + 0x02;
-	  	cfg.val.reg16 = (0x1<<1) | (0x1<<2);
-		ioctlWriteReg16(pGpmc , arg);
-		
-		cfg.offset = tport + 0x02;
-	  	cfg.val.reg16 = (0x1<<0) | (0x11<<6);
-		ioctlWriteReg16(pGpmc , arg);
-		
-		
-		}
-	}
-	else
-	{
-	
-	}
-	return 0;
+            // 开启读中断
+            cfg.offset = tport + 0x04;
+            cfg.val.reg16 = 0x0b;
+            ioctlWriteReg16(pGpmc , arg);
+
+            cfg.offset = tport + 0x01;
+            cfg.val.reg16 = 0x01;
+            ioctlWriteReg16(pGpmc , arg);
+
+            // 开启fifo
+            cfg.offset = tport + 0x02;
+            cfg.val.reg16 = (0x1<<1) | (0x1<<2);
+            ioctlWriteReg16(pGpmc , arg);
+
+            cfg.offset = tport + 0x02;
+            cfg.val.reg16 = (0x1<<0) | (0x11<<6);
+            ioctlWriteReg16(pGpmc , arg);
+
+
+        }
+    }
+    else
+    {
+
+    }
+    return 0;
 }
 
 /* 这个结构是字符设备驱动程序的核心
@@ -546,7 +541,7 @@ int uartInit(sGpmcData* myPGpmc)
  * 最终会调用这个结构中指定的对应函数
  */
 static struct file_operations uemUartfops = {
-    .owner  =   THIS_MODULE,    /* 这是一个宏，推向编译模块时自动创建的__this_module变量 */
+    .owner  =   THIS_MODULE,
     .open   =   uemUartOpen,
     .ioctl  =   uemUartIoctl,
     .read = uemUartRead,
@@ -564,7 +559,7 @@ static void uemUartSetupCdev(sGpmcData *dev, int index)
     cdev_init(&dev->cdev, &uemUartfops);
     dev->cdev.owner = THIS_MODULE;
     dev->cdev.ops = &uemUartfops;
-	dev->devno = devno;
+    dev->devno = devno;
     err = cdev_add(&dev->cdev, devno, 1);
     if (err)
     {
@@ -584,49 +579,49 @@ static int __init omap3530UemUartInit(void)
     unsigned long cs_mem_base;
     //void *pRet;
 
-	devno = MKDEV(uemUartMajor, uemUartMinor);
+    devno = MKDEV(uemUartMajor, uemUartMinor);
 
     /* 申请设备号*/
     if (uemUartMajor)
     {
         result = register_chrdev_region(devno, uemUartNrDevs, DEVICE_NAME);
     }
-	else  /* 动态申请设备号 */
+    else  /* 动态申请设备号 */
     {
         result = alloc_chrdev_region(&devno, 0, uemUartNrDevs, DEVICE_NAME);
         uemUartMajor = MAJOR(devno);
-		VaeDebug("uemUartMajor = %d\r\n",uemUartMajor);
+        VaeDebug("uemUartMajor = %d\r\n",uemUartMajor);
     }
     if(result <0)
     {
         return result;
     }
-	
+
     /* 动态申请设备结构体的内存*/
     pUemUartDev = kmalloc(sizeof(sGpmcData)*uemUartNrDevs, GFP_KERNEL);
     if (!pUemUartDev)    /* 申请失败 */
     {
-    	
-		VaeDebug("mem err \r\n");
-       	result =  - ENOMEM;
+
+        VaeDebug("mem err \r\n");
+        result =  - ENOMEM;
         goto fail_malloc;
     }
     //memset(pUemUartDev, 0, sizeof(sGpmcData));
-	
-	uemUartSetupCdev(&pUemUartDev[i], 0);
 
-	for (i = 0; i < UEM_UART_NR_DEVS; i++)
-	{	
-		uemUartSetupCdev(&pUemUartDev[i], i);
-    	pUemUartDev[i].data_buf = kmalloc(UART_BUF_SIZE, GFP_KERNEL);
+    uemUartSetupCdev(&pUemUartDev[i], 0);
 
-		// fifo 的申请
-		spin_lock_init(&(pUemUartDev[i].fifoLock));
+    for (i = 0; i < uemUartNrDevs; i++)
+    {
+        uemUartSetupCdev(&pUemUartDev[i], i);
+        pUemUartDev[i].data_buf = kmalloc(UART_BUF_SIZE, GFP_KERNEL);
 
-		// 申请失败的策略暂未考虑
-		pUemUartDev[i].pFifo = kfifo_alloc(UART_FIFO_SIZE, GFP_KERNEL, &pUemUartDev[i].fifoLock);
+        // fifo 的申请
+        spin_lock_init(&(pUemUartDev[i].fifoLock));
 
-	}
+        // 申请失败的策略暂未考虑
+        pUemUartDev[i].pFifo = kfifo_alloc(UART_FIFO_SIZE, GFP_KERNEL, &pUemUartDev[i].fifoLock);
+
+    }
 
     l3ck = clk_get(NULL, "l3_ck");
 
@@ -660,7 +655,6 @@ static int __init omap3530UemUartInit(void)
     if (ret < 0)
     {
         printk(KERN_ERR "Failed to request GPMC mem for fpga\n");
-        VaeDebug("ret = %d\r\n", ret);
         return - ENOMEM;
     }
     //printk(KERN_ERR " GPMC mem for fpga %08lx\n",cs_mem_base);
@@ -671,50 +665,49 @@ static int __init omap3530UemUartInit(void)
     if (pUemUartDev->ioaddr == NULL)
     {
         printk(KERN_ERR "Failed to ioremap for fpga\n");
-        VaeDebug("\r\n");
         return -ENOMEM;
     }
 
-	for (i = 1; i < uemUartNrDevs; i++)
-	{
-		pUemUartDev[i].ioaddr = pUemUartDev[0].ioaddr;
-		pUemUartDev[i].gpmcCS = pUemUartDev[0].gpmcCS;
-		pUemUartDev[i].cs_mem_base = pUemUartDev[0].cs_mem_base;
-		pUemUartDev[i].dateCnt = pUemUartDev[0].dateCnt;
-		pUemUartDev[i].devno= pUemUartDev[0].devno + i;
-	}
+    for (i = 1; i < uemUartNrDevs; i++)
+    {
+        pUemUartDev[i].ioaddr = pUemUartDev[0].ioaddr;
+        pUemUartDev[i].gpmcCS = pUemUartDev[0].gpmcCS;
+        pUemUartDev[i].cs_mem_base = pUemUartDev[0].cs_mem_base;
+        pUemUartDev[i].dateCnt = pUemUartDev[0].dateCnt;
+        pUemUartDev[i].devno= pUemUartDev[0].devno + i;
+    }
 
-	uartIrqTestInit(); 
+    uartIrqTestInit();
 
-	uartInit(NULL);
-	
+    uartInit(NULL);
+
     return 0;
-    fail_malloc:
-        unregister_chrdev_region(devno, 1);
+fail_malloc:
+    unregister_chrdev_region(devno, 1);
     return result;
 }
 
 /*设备驱动卸载函数*/
 static void __exit omap3530UemUartExit(void)
 {
-	int i;
+    int i;
     dev_t devno ;
     //iounmap(dev->FpgaDDRVirtualAddr);
 
-	for (i = 0; i < uemUartNrDevs; i++)
-	{
-		kfree(pUemUartDev[i].data_buf);
-		kfifo_free(pUemUartDev[i].pFifo);
-	}
+    for (i = 0; i < uemUartNrDevs; i++)
+    {
+        kfree(pUemUartDev[i].data_buf);
+        kfifo_free(pUemUartDev[i].pFifo);
+    }
 
     /* 卸载驱动程序 */
-	for (i = 0; i < uemUartNrDevs; i ++)
-	{
-		cdev_del(&(pUemUartDev[i].cdev));
-		devno = MKDEV(uemUartMajor, i);
-		unregister_chrdev_region(devno, uemUartNrDevs);
-	}	
-	
+    for (i = 0; i < uemUartNrDevs; i ++)
+    {
+        cdev_del(&(pUemUartDev[i].cdev));
+        devno = MKDEV(uemUartMajor, i);
+        unregister_chrdev_region(devno, uemUartNrDevs);
+    }
+
     gpmc_cs_free(pUemUartDev->gpmcCS);
     //release_mem_region(pUemUartDev->cs_mem_base, 1024);
     iounmap((void __iomem *)pUemUartDev->ioaddr);
@@ -722,9 +715,9 @@ static void __exit omap3530UemUartExit(void)
     {
         kfree(pUemUartDev);
     }
-	
-	uartIrqRelease();
-	
+
+    uartIrqRelease();
+
     VaeDebug("uem uart driver cleaned up\n");
 }
 
